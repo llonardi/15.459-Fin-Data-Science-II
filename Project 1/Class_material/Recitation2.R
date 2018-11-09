@@ -3,22 +3,26 @@
 ###             Youssef Berrada                 ###
 ###             yberrada@mit.edu                ###
 ###                Fall 2018                    ###
+
 library(tm)
 library(RTextTools)
-library(Rgr)
 
 #1. Data Acquisition
 
-require(tm.corpus.Reuters21578)
+#install.packages("tm.corpus.Reuters21578", repos="http://datacube.wu.ac.at")
+#require(tm.corpus.Reuters21578)
+library(tm.corpus.Reuters21578)
 data(Reuters21578)
 rt = Reuters21578
 
-
-ID(rt[[1]])                     
+#ID(rt[[1]])                     
 meta(rt[[1]])                   
 show(rt)                        
 summary(rt)                     
-inspect(rt)  
+inspect(rt) 
+
+rt[[1]]
+rt[[1]]$meta
 
 
 #2. Data-Preprocessing
@@ -45,9 +49,6 @@ clean_corpus <- clean.rt(rt)
 #given topics
 topics <- c("earn","ship")
 clean_dtm <-DocumentTermMatrix(clean_corpus)
-
-
-
 
 #3. Data Analysis
 
