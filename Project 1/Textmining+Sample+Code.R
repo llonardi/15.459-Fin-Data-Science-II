@@ -45,7 +45,10 @@ clean_corpus <- function(corpus){
 
 mycorpus = clean_corpus(mycorpus)
 
+inspect(mycorpus[[2]])
+
 #build Term Document Matrix
+#?TermDocumentMatrix
 myTDM<-TermDocumentMatrix(mycorpus, control=list(minWordLength=1))
 myTDMdf<-as.data.frame(as.matrix(t(myTDM)))
 
@@ -53,15 +56,18 @@ myTDMdf<-as.data.frame(as.matrix(t(myTDM)))
 findFreqTerms(myTDM,lowfreq=100)
 
 #find associations
-findAssocs(myTDM, terms='war', 0.1)
+#?findAssocs
+findAssocs(myTDM, terms='war', 0.2)
 
 #n-grams analysis
 mydf<-data.frame(text=unlist(sapply(mycorpus,'[',"content")),stringAsFactors=FALSE)
 mydf$text<-as.character(mydf$text)
 
+#?textcnt
 ngram_1L<-textcnt(mydf$text,n=1L,method="string")
 ngram_t1<-data.frame(counts=unclass(ngram_1L),size=nchar(names(ngram_1L)),text=names(ngram_1L))
 n1L<-arrange(ngram_t1,desc(counts))
+
 counts1<-n1L[,c(3,1)]
 View(counts1)
 
@@ -76,7 +82,10 @@ wordcloud(counts1$text,counts1$count,min.freq=50)
 
 #finding the types of articles
 #k-means clustering
+
 wss<-(nrow(myTDMdf)-1)*sum(apply(myTDMdf,2,var))
+
+#?kmeans
 for(i in 1:15){wss[i]<-sum(kmeans(myTDMdf,centers=i)$withinss)}
 plot(1:15,wss,type="b",xlab="No. of Clusters",ylab="wss")
 
