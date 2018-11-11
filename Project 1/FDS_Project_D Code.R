@@ -1,13 +1,13 @@
 rm(list=ls())
 
-#install.packages(c("mnormt", "psych", "SnowballC", "hunspell", 
+install.packages(c("mnormt", "psych", "SnowballC", "hunspell", 
                    "broom", "tokenizers", "janeaustenr"))
-#install.packages("tidytext")
-#install.packages("e1071")
-#install.packages("RTextTools")
-#install.packages("tm")
-#install.packages("wordcloud")
-#install.packages("slam")
+install.packages("tidytext")
+install.packages("e1071")
+install.packages("RTextTools")
+install.packages("tm")
+install.packages("wordcloud")
+install.packages("slam")
 library(stringr)
 library(tidyquant)
 library(RTextTools)
@@ -17,12 +17,11 @@ library(broom)
 library(pdftools)
 library(tau)
 library(wordcloud)
-library(readxl)
 
 # Read in data
-Parent_train <- read.csv("/Users/hermannviktor/Dropbox/MIT/Courses/2. Fall Term/15.458 Data Science/Assignments/Assignment 4/H1_Data.csv",sep=";",row.names=NULL)######
-Child_train <- read.csv("/Users/hermannviktor/Dropbox/MIT/Courses/2. Fall Term/15.458 Data Science/Assignments/Assignment 4/Heirarchies_Data.csv",row.names=NULL)
-testerBitch <- read.csv("/Users/hermannviktor/Dropbox/MIT/Courses/2. Fall Term/15.458 Data Science/Assignments/Assignment 4/Data_proj_d_test.csv",row.names=NULL)
+Parent_train <- read.csv("H1_Data.csv")
+Child_train <- read.csv("Heirarchies_Data.csv")
+testerBitch <- read.csv("Data_proj_d_test.csv")
 
 # Slicing testerBitch into H1 and lower classes
 
@@ -41,48 +40,56 @@ parent_total <- rbind(Parent_train, parent_test)
 parent_total$cat <- trimws(parent_total$cat) 
 
 head(parent_total$cat)
-
 #Document Term Matrix
 doc_matrix <- create_matrix(parent_total$article, language="english", removeNumbers=TRUE,
                             stemWords=TRUE, removeSparseTerms=.998)
 
 #Container
-container <- create_container(doc_matrix, parent_total$cat, trainSize=1:200,
-                              testSize=201:400, virgin=FALSE)  ###############
+container <- create_container(doc_matrix, parent_total$cat, trainSize=1:7000,
+                              testSize=(length(Parent_train$cat)+1):(length(Parent_train$cat)+7001), virgin=FALSE)  ###############
 
 #Training Models
 SVM <- train_model(container,"SVM")
+GLMNET <- train_model(container,"GLMNET")
+MAXENT <- train_model(container,"MAXENT")
 SLDA <- train_model(container,"SLDA")
+BOOSTING <- train_model(container,"BOOSTING")
 BAGGING <- train_model(container,"BAGGING")
+RF <- train_model(container,"RF")
 NNET <- train_model(container,"NNET")
+TREE <- train_model(container,"TREE")
 
 #Classifications
 SVM_CLASSIFY <- classify_model(container, SVM) #3 MANGOOOOO
+GLMNET_CLASSIFY <- classify_model(container, GLMNET)
+MAXENT_CLASSIFY <- classify_model(container, MAXENT)
 SLDA_CLASSIFY <- classify_model(container, SLDA) #2 Laura
+BOOSTING_CLASSIFY <- classify_model(container, BOOSTING)
 BAGGING_CLASSIFY <- classify_model(container, BAGGING)#very sexual tbh
+RF_CLASSIFY <- classify_model(container, RF) #possibly sexual
 NNET_CLASSIFY <- classify_model(container, NNET) #1
+TREE_CLASSIFY <- classify_model(container, TREE)
 
 # 5.Analytics
 analytics_SVM <- create_analytics(container,
                                   cbind(SVM_CLASSIFY))
 summary(analytics_SVM)
 
+
 analytics_SLDA <- create_analytics(container,
                                    cbind(SLDA_CLASSIFY))
 summary(analytics_SLDA)
+
 
 analytics_BAGGING <- create_analytics(container,
                                       cbind(BAGGING_CLASSIFY))
 summary(analytics_BAGGING)
 
+
 analytics_NNET <- create_analytics(container,
                                    cbind(NNET_CLASSIFY))
 
 summary(analytics_NNET)
-
-analytics_total <- create_analytics(container,
-                                  cbind(SVM_CLASSIFY, SLDA_CLASSIFY))
-summary(analytics_total)
 
 
 #Evaluation criteia 
@@ -103,7 +110,7 @@ Recall_NNET <- c()
 F1Score_NNET <- c()
 
 
-# Accuracy dataframe
+#SVM Accuracy dataframe
 for(i in 1:length(h1)) {
   Precision_SVM[i] <- summary(analytics_SVM[[i]])[1]
   Recall_SVM[i] <- summary(analytics_SVM[[i]])[2]
@@ -132,9 +139,6 @@ score_NNET <- data.frame(topics_NNET, Precision_NNET, Recall_NNET, F1Score_NNET)
 #alg_summary <- analytics@algorithm_summary
 #ens_summary <-analytics@ensemble_summary
 #doc_summary <- analytics@document_summary
-
-# Create Ensemble Agreement
-ensemble = create_ensembleSummary(analytics_total@document_summary)
 
 # 6.Cross-Validation
 SVM <- cross_validate(container, 4, "SVM")
