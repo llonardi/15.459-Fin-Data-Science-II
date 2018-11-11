@@ -41,17 +41,15 @@ parent_total$cat <- trimws(parent_total$cat)
 
 head(parent_total$cat)
 #Document Term Matrix
-doc_matrix <- create_matrix(parent_total$article, language="english", removeNumbers=TRUE,
+doc_matrix <- create_matrix(parent_total$article[1:400], language="english", removeNumbers=TRUE,
                             stemWords=TRUE, removeSparseTerms=.998)
 
 #Container
-container <- create_container(doc_matrix, parent_total$cat, trainSize=1:7000,
-                              testSize=(length(Parent_train$cat)+1):(length(Parent_train$cat)+7001), virgin=FALSE)  ###############
+container <- create_container(doc_matrix, parent_total$cat, trainSize=1:200,
+                              testSize=201:400, virgin=FALSE)  ###############
 
 #Training Models
 SVM <- train_model(container,"SVM")
-GLMNET <- train_model(container,"GLMNET")
-MAXENT <- train_model(container,"MAXENT")
 SLDA <- train_model(container,"SLDA")
 BOOSTING <- train_model(container,"BOOSTING")
 BAGGING <- train_model(container,"BAGGING")
@@ -90,6 +88,11 @@ analytics_NNET <- create_analytics(container,
                                    cbind(NNET_CLASSIFY))
 
 summary(analytics_NNET)
+
+analytics_total <- create_analytics(container,
+                                   cbind(SVM_CLASSIFY, BAGGING_CLASSIFY))
+
+summary(analytics_total)
 
 
 #Evaluation criteia 
