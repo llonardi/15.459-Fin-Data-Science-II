@@ -19,9 +19,9 @@ library(tau)
 library(wordcloud)
 
 # Read in data
-Parent_train <- read.csv("H1_Data.csv")
-Child_train <- read.csv("Heirarchies_Data.csv")
-testerBitch <- read.csv("Data_proj_d_test.csv")
+Parent_train <- read.csv("/Users/hermannviktor/Dropbox/MIT/Courses/2. Fall Term/15.458 Data Science/Assignments/Assignment 4/H1_Data.csv",sep=";",row.names = NULL)
+Child_train <- read.csv("/Users/hermannviktor/Dropbox/MIT/Courses/2. Fall Term/15.458 Data Science/Assignments/Assignment 4/Heirarchies_Data.csv",row.names = NULL)
+testerBitch <- read.csv("/Users/hermannviktor/Dropbox/MIT/Courses/2. Fall Term/15.458 Data Science/Assignments/Assignment 4/Data_proj_d_test.csv", row.names = NULL)
 
 # Slicing testerBitch into H1 and lower classes
 
