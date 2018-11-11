@@ -21,7 +21,7 @@ library(wordcloud)
 # Read in data
 Parent_train <- read.csv("H1_Data.csv")
 Child_train <- read.csv("Heirarchies_Data.csv")
-testerBitch <- read.csv("Data_proj_d_test.csv")
+testerBitch <- read.csv("Proj_D_test.csv")
 
 # Slicing testerBitch into H1 and lower classes
 
@@ -39,58 +39,39 @@ parent_total <- rbind(Parent_train, parent_test)
 
 parent_total$cat <- trimws(parent_total$cat) 
 
-head(parent_total$cat)
 #Document Term Matrix
 doc_matrix <- create_matrix(parent_total$article, language="english", removeNumbers=TRUE,
                             stemWords=TRUE, removeSparseTerms=.998)
 
 #Container
-container <- create_container(doc_matrix, parent_total$cat, trainSize=1:7000,
-                              testSize=(length(Parent_train$cat)+1):(length(Parent_train$cat)+7001), virgin=FALSE)  ###############
+container <- create_container(doc_matrix,as.numeric(factor(parent_total$cat)), trainSize=1:7000,
+                              testSize=(length(Parent_train$cat)+1):(length(Parent_train$cat)+7001), virgin=FALSE)  
 
 #Training Models
 SVM <- train_model(container,"SVM")
-GLMNET <- train_model(container,"GLMNET")
-MAXENT <- train_model(container,"MAXENT")
-SLDA <- train_model(container,"SLDA")
-BOOSTING <- train_model(container,"BOOSTING")
-BAGGING <- train_model(container,"BAGGING")
-RF <- train_model(container,"RF")
-NNET <- train_model(container,"NNET")
-TREE <- train_model(container,"TREE")
-
-#Classifications
 SVM_CLASSIFY <- classify_model(container, SVM) #3 MANGOOOOO
-GLMNET_CLASSIFY <- classify_model(container, GLMNET)
-MAXENT_CLASSIFY <- classify_model(container, MAXENT)
-SLDA_CLASSIFY <- classify_model(container, SLDA) #2 Laura
-BOOSTING_CLASSIFY <- classify_model(container, BOOSTING)
-BAGGING_CLASSIFY <- classify_model(container, BAGGING)#very sexual tbh
-RF_CLASSIFY <- classify_model(container, RF) #possibly sexual
-NNET_CLASSIFY <- classify_model(container, NNET) #1
-TREE_CLASSIFY <- classify_model(container, TREE)
-
-# 5.Analytics
 analytics_SVM <- create_analytics(container,
                                   cbind(SVM_CLASSIFY))
 summary(analytics_SVM)
 
-
+SLDA <- train_model(container,"SLDA")
+SLDA_CLASSIFY <- classify_model(container, SLDA) #2 Laura
 analytics_SLDA <- create_analytics(container,
                                    cbind(SLDA_CLASSIFY))
 summary(analytics_SLDA)
 
-
+BAGGING <- train_model(container,"BAGGING")
+BAGGING_CLASSIFY <- classify_model(container, BAGGING)#very sexual tbh
 analytics_BAGGING <- create_analytics(container,
                                       cbind(BAGGING_CLASSIFY))
 summary(analytics_BAGGING)
 
-
+NNET <- train_model(container,"NNET")
+NNET_CLASSIFY <- classify_model(container, NNET) #1
 analytics_NNET <- create_analytics(container,
                                    cbind(NNET_CLASSIFY))
 
 summary(analytics_NNET)
-
 
 #Evaluation criteia 
 Precision_SVM <-c()
@@ -149,3 +130,5 @@ NNET <- cross_validate(container, 4, "NNET")
 
 # 7.Exporting Data
 write.csv(analytics@document_summary, "DocumentSummary.csv")
+
+
