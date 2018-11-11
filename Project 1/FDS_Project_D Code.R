@@ -19,9 +19,9 @@ library(tau)
 library(wordcloud)
 
 # Read in data
-Parent_train <- read.csv("H1_Data.csv")
-Child_train <- read.csv("Heirarchies_Data.csv")
-testerBitch <- read.csv("Proj_D_test.csv")
+Parent_train <- read.csv("/Users/hermannviktor/Dropbox/MIT/Courses/2. Fall Term/15.458 Data Science/Assignments/Assignment 4/H1_Data.csv",sep=";")
+Child_train <- read.csv("/Users/hermannviktor/Dropbox/MIT/Courses/2. Fall Term/15.458 Data Science/Assignments/Assignment 4/Heirarchies_Data.csv")
+testerBitch <- read.csv("/Users/hermannviktor/Dropbox/MIT/Courses/2. Fall Term/15.458 Data Science/Assignments/Assignment 4/Data_proj_D_test.csv")
 
 # Slicing testerBitch into H1 and lower classes
 
@@ -40,86 +40,39 @@ parent_total <- rbind(Parent_train, parent_test)
 parent_total$cat <- trimws(parent_total$cat) 
 
 #Document Term Matrix
-doc_matrix <- create_matrix(parent_total$article, language="english", removeNumbers=TRUE,
+doc_matrix <- create_matrix(parent_total$article[1:4000], language="english", removeNumbers=TRUE,
                             stemWords=TRUE, removeSparseTerms=.998)
 
 #Container
-container <- create_container(doc_matrix,as.numeric(factor(parent_total$cat)), trainSize=1:7000,
-                              testSize=(length(Parent_train$cat)+1):(length(Parent_train$cat)+7001), virgin=FALSE)  
+container <- create_container(doc_matrix,as.numeric(factor(parent_total$cat)), trainSize=1:2000,
+                              testSize=2001:4000, virgin=FALSE)  
 
 #Training Models
 SVM <- train_model(container,"SVM")
 SVM_CLASSIFY <- classify_model(container, SVM) #3 MANGOOOOO
-analytics_SVM <- create_analytics(container,
-                                  cbind(SVM_CLASSIFY))
-summary(analytics_SVM)
 
 SLDA <- train_model(container,"SLDA")
 SLDA_CLASSIFY <- classify_model(container, SLDA) #2 Laura
-analytics_SLDA <- create_analytics(container,
-                                   cbind(SLDA_CLASSIFY))
-summary(analytics_SLDA)
 
 BAGGING <- train_model(container,"BAGGING")
 BAGGING_CLASSIFY <- classify_model(container, BAGGING)#very sexual tbh
-analytics_BAGGING <- create_analytics(container,
-                                      cbind(BAGGING_CLASSIFY))
-summary(analytics_BAGGING)
 
 NNET <- train_model(container,"NNET")
 NNET_CLASSIFY <- classify_model(container, NNET) #1
-analytics_NNET <- create_analytics(container,
-                                   cbind(NNET_CLASSIFY))
 
-summary(analytics_NNET)
+GLMNET = train_model(container,"GLMNET")
+GLMNET_CLASSIFY = classify_model(container,GLMNET)
 
-#Evaluation criteia 
-Precision_SVM <-c()
-Recall_SVM <- c()
-F1Score_SVM <- c()
+MAXENT = train_model(container, "MAXENT")
+MAXENT_CLASSIFY = classify_model(container,MAXENT)
 
-Precision_SLDA <-c()
-Recall_SLDA <- c()
-F1Score_SLDA <- c()
+BOOSTING = train_model(container, "BOOSTING")
+BOOSTING_CLASSIFY = classify_model(container, BOOSTING)
 
-Precision_BAGGING <-c()
-Recall_BAGGING <- c()
-F1Score_BAGGING <- c()
+analytics_total = create_analytics(container, 
+                                   cbind(SVM_CLASSIFY,SLDA_CLASSIFY,BAGGING_CLASSIFY, NNET_CLASSIFY,GLMNET_CLASSIFY, MAXENT_CLASSIFY, BOOSTING_CLASSIFY))
+summary(analytics_total)
 
-Precision_NNET <-c()
-Recall_NNET <- c()
-F1Score_NNET <- c()
-
-
-#SVM Accuracy dataframe
-for(i in 1:length(h1)) {
-  Precision_SVM[i] <- summary(analytics_SVM[[i]])[1]
-  Recall_SVM[i] <- summary(analytics_SVM[[i]])[2]
-  F1Score_SVM[i] <- summary(analytics_SVM[[i]])[3]
-  
-  Precision_SLDA[i] <- summary(analytics_SLDA[[i]])[1]
-  Recall_SLDA[i] <- summary(analytics_SLDA[[i]])[2]
-  F1Score_SLDA[i] <- summary(analytics_SLDA[[i]])[3]
-  
-  Precision_BAGGING[i] <- summary(analytics_BAGGING[[i]])[1]
-  Recall_BAGGING[i] <- summary(analytics_BAGGING[[i]])[2]
-  F1Score_BAGGING[i] <- summary(analytics_BAGGING[[i]])[3]
-  
-  Precision_NNET[i] <- summary(analytics_NNET[[i]])[1]
-  Recall_NNET[i] <- summary(analytics_NNET[[i]])[2]
-  F1Score_NNET[i] <- summary(analytics_NNET[[i]])[3] 
-}
-
-
-score_SVM <- data.frame(topics_SVM, Precision_SVM, Recall_SVM, F1Score_SVM)
-score_SLDA <- data.frame(topics_SLDA, Precision_SLDA, Recall_SLDA, F1Score_SLDA)
-score_BAGGING <- data.frame(topics_BAGGING, Precision_BAGGING, Recall_BAGGING, F1Score_BAGGING)
-score_NNET <- data.frame(topics_NNET, Precision_NNET, Recall_NNET, F1Score_NNET)
-
-#topic_summary <- analytics@label_summary
-#alg_summary <- analytics@algorithm_summary
-#ens_summary <-analytics@ensemble_summary
-#doc_summary <- analytics@document_summary
 
 # 6.Cross-Validation
 SVM <- cross_validate(container, 4, "SVM")
