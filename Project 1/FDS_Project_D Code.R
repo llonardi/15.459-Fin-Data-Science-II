@@ -12,6 +12,7 @@ rm(list=ls())
 #library(tidyquant)
 library(RTextTools)
 library(tm)
+library(slam)
 #library(SnowballC)
 #library(broom)
 #library(pdftools)
@@ -109,52 +110,65 @@ GLMNET <- cross_validate(container, n_times_fold, "GLMNET")
 BAGGING <- cross_validate(container, n_times_fold, "BAGGING")
 NNET <- cross_validate(container, n_times_fold, "NNET")
 
-# Training models - model tuning
+# Training models - model selection
 analytics_svm_maxent = create_analytics(container,
                                         cbind(SVM_CLASSIFY,MAXENT_CLASSIFY))
 summary(analytics_svm_maxent)
 
-LGLMNET=train_model(container,"GLMNET",maxitglm = 10^6)
-LGLMNET_CLASSIFY = classify_model(container,LGLMNET)
+# Model tuning
+# SVM
+change_SVM = train_model(container,
+                       "SVM",
+                       cost = 0.1,
+                       cross = 10)
+change_SVM_CLASSIFY = classify_model(container,change_SVM)
 
+analytics_change_SVM = create_analytics(container,
+                                      cbind(change_SVM_CLASSIFY))
+summary(analytics_cost_SVM)
+
+#Maxent
 Y1_MAXENT = train_model(container, "MAXENT", l1_regularizer = 1, use_sgd = TRUE)
 Y1_MAXENT_CLASSIFY = classify_model(container,Y1_MAXENT)
 
 Y2_MAXENT = train_model(container, "MAXENT", l2_regularizer = 1)
 Y2_MAXENT_CLASSIFY = classify_model(container,Y2_MAXENT)
 
-Y3_MAXENT = train_model(container, "MAXENT", set_heldout = 0.2*8*test_batch)
+Y3_MAXENT = train_model(container, "MAXENT", use_sgd = TRUE)
 Y3_MAXENT_CLASSIFY = classify_model(container,Y3_MAXENT)
 
-#Ensemble Analytics
+analytics_change_MAXENT = create_analytics(container,
+                                        cbind(Y3_MAXENT_CLASSIFY))
+summary(analytics_change_MAXENT)
 
-#MAXENT and GLMNET
-MGanalytics_total = create_analytics(container, cbind(MAXENT_CLASSIFY,GLMNET_CLASSIFY))
-summary(MGanalytics_total)
+#Ensemble Analytics of Model tuning
+#Tsuruoka 2 and original SVM
+ensemble_analytics_total = create_analytics(container, cbind(SVM_CLASSIFY,Y2_MAXENT_CLASSIFY))
+summary(ensemble_analytics_total)
 
-#MAXENT and SVM
-MSanalytics_total = create_analytics(container, cbind(MAXENT_CLASSIFY,SVM_CLASSIFY))
-summary(MSanalytics_total)
+# ------------------- THIS NEEDS TO BE FINISHED
+# Fine-tuning Tf-Idf
+#Train Set
+idf <- tapply(docmex$v/row_sums(docmex)[docmex$i], docmex$j, mean) * log2(nDocs(docmex)/col_sums(docmex > 0))
+summary(idf)
+#plot(idf)
 
-#SVM and GLMNET
-SGanalytics_total = create_analytics(container, cbind(SVM_CLASSIFY,GLMNET_CLASSIFY))
-summary(SGanalytics_total)
+docmex <- docmex[,idf >= 0.995]
+docmex <- docmex[row_sums(docmex) > 0,]
+dim(docmex)
 
-#Fine-Tune Analytics
-Y1analytics_total = create_analytics(container, Y1_MAXENT_CLASSIFY)
-summary(Y1analytics_total)
+#Remove SparseTerms
+rtdm <- removeSparseTerms(docmex, 0.995)
+dim(rtdm)
 
-Y2analytics_total = create_analytics(container, Y2_MAXENT_CLASSIFY)
-summary(Y2analytics_total)
 
-Y3analytics_total = create_analytics(container, Y3_MAXENT_CLASSIFY)
-summary(Y3analytics_total)
+#Remove Sparse Terms
+docmex <- removeSparseTerms(docmex, 0.1)
+dim(docmex)
 
-Lanalytics_total = create_analytics(container, LGLMNET_CLASSIFY)
-summary(Lanalytics_total)
+# ------------------- 
 
-EnsembleAnal_total=create_analytics(container, cbind(Y3_MAXENT_CLASSIFY,LGLMNET_CLASSIFY))
-summary(EnsembleAnal_total)
+
 
 # 7.Exporting Data
 write.csv(analytics@document_summary, "DocumentSummary.csv")
