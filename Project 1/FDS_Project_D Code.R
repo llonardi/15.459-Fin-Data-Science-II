@@ -8,15 +8,15 @@ rm(list=ls())
 #install.packages("tm")
 #install.packages("wordcloud")
 #install.packages("slam")
-library(stringr)
-library(tidyquant)
+#library(stringr)
+#library(tidyquant)
 library(RTextTools)
 library(tm)
-library(SnowballC)
-library(broom)
-library(pdftools)
-library(tau)
-library(wordcloud)
+#library(SnowballC)
+#library(broom)
+#library(pdftools)
+#library(tau)
+#library(wordcloud)
 
 #filepaths
 filepath_parent_train = "/Users/hermannviktor/Dropbox/MIT/Courses/2. Fall Term/15.458 Data Science/Assignments/Assignment 4/H1_Data.csv"
@@ -96,9 +96,11 @@ MAXENT = train_model(container, "MAXENT")
 MAXENT_CLASSIFY = classify_model(container,MAXENT)
 
 #Total Analytics
-analytics_total = create_analytics(container, cbind(SVM_CLASSIFY, SLDA_CLASSIFY, MAXENT_CLASSIFY,GLMNET_CLASSIFY))
+analytics_total = create_analytics(container,
+                                   cbind(SVM_CLASSIFY, SLDA_CLASSIFY, MAXENT_CLASSIFY,GLMNET_CLASSIFY,BAGGING_CLASSIFY,NNET_CLASSIFY))
 summary(analytics_total)
 
+# Cross-validation - Do NOT run unless necessary (takes ages)
 n_times_fold = 4
 SVM <- cross_validate(container, n_times_fold, "SVM")
 SLDA <- cross_validate(container, n_times_fold, "SLDA")
