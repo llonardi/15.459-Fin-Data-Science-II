@@ -19,25 +19,28 @@ library(tau)
 library(wordcloud)
 
 # Read in data
-Parent_train <- read.csv("H1_Data.csv")
-Child_train <- read.csv("Heirarchies_Data.csv")
+parent_train <- read.csv("H1_Data.csv")
+child_train <- read.csv("Heirarchies_Data.csv")
 testerBitch <- read.csv("Proj_D_test.csv")
-rm(newsDF)
+
 # Slicing testerBitch into H1 and lower classes
-
 testerBitch$cat <- trimws(testerBitch$cat) 
-
 h1 = c("GCAT","CCAT","ECAT","MCAT")
-
 testerBitch$cat <- as.character(testerBitch$cat)
+
 parent_test <- testerBitch[testerBitch$cat %in% h1,]  #%in% c("GCAT","CCAT","ECAT","MCAT"),]
 child_test <- testerBitch[!testerBitch$cat %in% h1,]
 
-colnames(Parent_train) = c("cat", "id", "article")
-
-parent_total <- rbind(Parent_train, parent_test)
-
+colnames(parent_train) = c("cat", "id", "article")
+parent_total <- rbind(parent_train, parent_test)
 parent_total$cat <- trimws(parent_total$cat) 
+
+
+#No Duplicate Data
+parent_trainND = parent_train[!duplicated(parent_train$id),]
+parent_testND = parent_test[!duplicated(parent_test$id),]
+parent_totalND <- rbind(parent_trainND, parent_testND)
+parent_totalND$cat <- trimws(parent_totalND$cat) 
 
 #Document Term Matrix
 doc_matrix <- create_matrix(parent_total$article, language="english", removeNumbers=TRUE,
