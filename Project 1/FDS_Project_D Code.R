@@ -110,6 +110,10 @@ BAGGING <- cross_validate(container, n_times_fold, "BAGGING")
 NNET <- cross_validate(container, n_times_fold, "NNET")
 
 # Training models - model tuning
+analytics_svm_maxent = create_analytics(container,
+                                        cbind(SVM_CLASSIFY,MAXENT_CLASSIFY))
+summary(analytics_svm_maxent)
+
 LGLMNET=train_model(container,"GLMNET",maxitglm = 10^6)
 LGLMNET_CLASSIFY = classify_model(container,LGLMNET)
 
