@@ -168,6 +168,8 @@ dim(docmex)
 
 # ------------------- 
 
+# Create a data set with duplicates
+
 
 
 # 7.Exporting Data
