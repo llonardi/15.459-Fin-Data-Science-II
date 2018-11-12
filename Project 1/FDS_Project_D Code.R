@@ -169,8 +169,55 @@ dim(docmex)
 # ------------------- 
 
 # Create a data set with duplicates
+batch_size = 250
+parent_test_duplicate = parent_test[1:(4*batch_size),]
+parent_train$cat <- trimws(parent_train$cat) 
+parent_train_CCAT = parent_train[parent_train$cat %in% "CCAT",][1:batch_size,]
+parent_train_ECAT = parent_train[parent_train$cat %in% "ECAT",][1:batch_size,]
+parent_train_GCAT = parent_train[parent_train$cat %in% "GCAT",][1:batch_size,]
+parent_train_MCAT = parent_train[parent_train$cat %in% "MCAT",][1:batch_size,]
 
+parent_train_total = rbind(parent_train_CCAT,
+                             parent_train_ECAT,
+                             parent_train_GCAT,
+                             parent_train_MCAT)
+rownames(parent_train_total) = NULL # resetting row numbers
 
+# Create a data set with both train and test data sets
+parent_total_duplicate <- rbind(parent_train_total, parent_test_duplicate)
+parent_total_duplicate$cat <- trimws(parent_total_duplicate$cat)
+
+#Document Term Matrix
+matrix_duplicate <- create_matrix(parent_total_duplicate$article,
+                            language="english",
+                            removeNumbers=TRUE,
+                            stemWords=TRUE,
+                            removeSparseTerms=.998)
+
+#Container
+container_duplicate <- create_container(matrix_duplicate,
+                              as.numeric(factor(parent_total_duplicate$cat)),
+                              trainSize=1:(4*batch_size),
+                              testSize=(4*batch_size+1):length(parent_total_duplicate$cat),
+                              virgin=FALSE)  
+
+# Model training
+BAGGING_duplicate <- train_model(container_duplicate,"BAGGING")
+BAGGING_duplicate_CLASSIFY <- classify_model(container_duplicate, BAGGING_duplicate)
+
+NNET_duplicate <- train_model(container_duplicate,"NNET")
+NNET_duplicate_CLASSIFY <- classify_model(container_duplicate, NNET_duplicate)
+
+# Check if NNET and BAGGING take care of multiple classifications by default --> answer: NO
+control_df_BAGGING = cbind(BAGGING_duplicate_CLASSIFY,parent_test_duplicate$id,parent_test_duplicate$cat)
+control_df_NNET = cbind(NNET_duplicate_CLASSIFY,parent_test_duplicate$id,parent_test_duplicate$cat)
+
+# Model training with allowing multiple classifications
+BAGGING_duplicate_multiple <- train_model(container_duplicate,"BAGGING")
+BAGGING_duplicate_multiple_CLASSIFY <- classify_model(container_duplicate, BAGGING_duplicate_multiple)
+
+NNET_multiple_duplicate <- train_model(container_duplicate,"NNET")
+NNET_duplicate_multiple_CLASSIFY <- classify_model(container_duplicate, NNET_duplicate_multiple)
 
 # 7.Exporting Data
 write.csv(analytics@document_summary, "DocumentSummary.csv")
