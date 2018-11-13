@@ -221,6 +221,7 @@ BAGGING_duplicate_multiple_CLASSIFY <- classify_model(container_duplicate, BAGGI
 NNET_multiple_duplicate <- train_model(container_duplicate,"NNET")
 NNET_duplicate_multiple_CLASSIFY <- classify_model(container_duplicate, NNET_duplicate_multiple)
 
+# ------------- NOT WORKING
 #Manual NNet
 mycorpus <- Corpus(VectorSource(parent_train_total$article))
 train_matrix = DocumentTermMatrix(mycorpus)
@@ -232,6 +233,7 @@ inspect(train_matrix_test[1:3,100:140])
 
 nnet_docmex = nnet(train_matrix,as.numeric(factor(parent_train_total$cat)), size = 4, MaxNWts = 60000, censored = FALSE)
 prediction = predict(nnet_docmex, train_matrix_test)
+# --------------
 
 # Creating SVM loop
 
@@ -253,7 +255,6 @@ labelFUN <- function(topic, rt) {
   return(ldafr)
 }
 
-#Dataframe for class label
 labelDF <- labelFUN(h1, parent_total_duplicate)
 
 container <- list()
@@ -268,7 +269,6 @@ for(i in 1:length(h1)){
   analytics[[i]] <- create_analytics(container[[i]], cbind(SVMCL))
 }
 
-#Evaluation criteia 
 Precision <-c()
 Recall <- c()
 F1Score <- c()
@@ -280,8 +280,3 @@ for(i in 1:length(h1)) {
 }
 scoreSVM <- data.frame(h1, Precision, Recall, F1Score)
 print(scoreSVM)
-
-# 7.Exporting Data
-write.csv(analytics@document_summary, "DocumentSummary.csv")
-
-

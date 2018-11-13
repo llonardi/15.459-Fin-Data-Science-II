@@ -92,9 +92,6 @@ for(i in 1:length(topics)){
   analytics[[i]] <- create_analytics(container[[i]], cbind(SVMCL))
 }
 
-
-
-
 #Evaluation criteia 
 Precision <-c()
 Recall <- c()
