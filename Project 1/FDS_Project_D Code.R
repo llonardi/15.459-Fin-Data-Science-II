@@ -259,15 +259,11 @@ labelDF <- labelFUN(h1, parent_total_duplicate)
 container <- list()
 analytics <- list()
 for(i in 1:length(h1)){
-  #container[[i]] <- create_container(clean_dtm, labelDF[rownames(clean_dtm), i], trainSize = 1:12850, testSize= 12850:19049, virgin=FALSE)
   container[[i]] <- create_container(train_matrix_total, labelDF[rownames(train_matrix_total), i], trainSize = 1:1000, testSize= 1001:2000, virgin=FALSE)
-  
   #Train
   SVM <- train_model(container[[i]], "SVM")
-  
   #Classify
   SVMCL <- classify_model(container[[i]], SVM)
-  
   #Analytics
   analytics[[i]] <- create_analytics(container[[i]], cbind(SVMCL))
 }
@@ -277,7 +273,6 @@ Precision <-c()
 Recall <- c()
 F1Score <- c()
 
-#SVM Accuracy dataframe
 for(i in 1:length(h1)) {
   Precision[i] <- summary(analytics[[i]])[1]
   Recall[i] <- summary(analytics[[i]])[2]
