@@ -223,16 +223,24 @@ NNET_duplicate_multiple_CLASSIFY <- classify_model(container_duplicate, NNET_dup
 
 # ------------- NOT WORKING
 #Manual NNet
-mycorpus <- Corpus(VectorSource(parent_train_total$article))
+set_sparse = 0.998
+mycorpus <- VCorpus(VectorSource(parent_train_total$article))
 train_matrix = DocumentTermMatrix(mycorpus)
+train_matrix_sparse = removeSparseTerms(train_matrix,
+                                        sparse = set_sparse)
 
-my_corpus_test = Corpus(VectorSource(parent_test_duplicate$article))
+my_corpus_test = VCorpus(VectorSource(parent_test_duplicate$article))
 train_matrix_test = DocumentTermMatrix(my_corpus_test)
+train_matrix_test_sparse = removeSparseTerms(train_matrix_test,
+                                             sparse = set_sparse)
 
-inspect(train_matrix_test[1:3,100:140])
+nnet_docmex = nnet(train_matrix_sparse,
+                   as.numeric(factor(parent_train_total$cat)),
+                   size = 4,
+                   MaxNWts = 60000,
+                   censored = FALSE)
 
-nnet_docmex = nnet(train_matrix,as.numeric(factor(parent_train_total$cat)), size = 4, MaxNWts = 60000, censored = FALSE)
-prediction = predict(nnet_docmex, train_matrix_test)
+prediction = predict(nnet_docmex,train_matrix_test_sparse)
 # --------------
 
 # Creating SVM loop
