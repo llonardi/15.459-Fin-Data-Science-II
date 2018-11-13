@@ -219,6 +219,24 @@ BAGGING_duplicate_multiple_CLASSIFY <- classify_model(container_duplicate, BAGGI
 NNET_multiple_duplicate <- train_model(container_duplicate,"NNET")
 NNET_duplicate_multiple_CLASSIFY <- classify_model(container_duplicate, NNET_duplicate_multiple)
 
+#Manual NNet
+mycorpus <- Corpus(VectorSource(parent_train_total$article))
+mycorpus1 <- Corpus(VectorSource(parent_train_total$cat))
+train_matrix=DocumentTermMatrix(mycorpus)
+
+inspect(train_matrix[1:2,1:20])
+nrow(train_matrix)
+as.data.frame(train_matrix)
+
+nnet(train_matrix,as.numeric(factor(parent_train_total$cat)), size = 8, MaxNWts = 80000)
+class(as.factor(parent_train_total$cat))
+NNET_Manipulation = nnet(train_matrix$v,train_matrix$i,size=10,censored = FALSE)
+ypred=predict(NNET_Manipulation,newdata=test_matrix$i)
+head(ypred)
+length(unique(matrix_duplicate$v))
+max(train_matrix$i)
+
+
 # 7.Exporting Data
 write.csv(analytics@document_summary, "DocumentSummary.csv")
 
