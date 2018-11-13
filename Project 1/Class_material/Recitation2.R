@@ -15,6 +15,8 @@ library(tm.corpus.Reuters21578)
 data(Reuters21578)
 rt = Reuters21578
 
+class(rt)
+
 #ID(rt[[1]])                     
 meta(rt[[1]])                   
 show(rt)                        
@@ -45,7 +47,6 @@ clean.rt <- function(rt) {
 
 clean_corpus <- clean.rt(rt)
 
-
 #given topics
 topics <- c("earn","ship")
 clean_dtm <-DocumentTermMatrix(clean_corpus)
@@ -70,12 +71,10 @@ labelFUN <- function(topic, rt) {
   return(ldafr)
 }
 
-
+length(rt)
 
 #Dataframe for class labels
 labelDF <- labelFUN(topics, rt)
-
-
 
 container <- list()
 analytics <- list()
@@ -108,6 +107,7 @@ for(i in 1:length(topics)) {
   F1Score[i] <- summary(analytics[[i]])[3]
 }
 scoreSVM <- data.frame(topics, Precision, Recall, F1Score)
+print(scoreSVM)
 
 topic_summary <- analytics[[1]]@label_summary
 alg_summary <-  analytics[[1]]@algorithm_summary

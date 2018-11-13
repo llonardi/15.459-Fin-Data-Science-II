@@ -25,8 +25,7 @@ data("NYTimes")
 nyt.data <- NYTimes
 mycorpus <- VCorpus(VectorSource(nyt.data$Title))
 
-
-inspect(mycorpus[[2]])
+mycorpus[[3]]
 
 clean_corpus <- function(corpus){
   mycorpus<-tm_map(mycorpus,content_transformer(tolower))

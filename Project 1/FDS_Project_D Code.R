@@ -8,11 +8,13 @@ rm(list=ls())
 #install.packages("tm")
 #install.packages("wordcloud")
 #install.packages("slam")
+#install.packages("nnet")
 #library(stringr)
 #library(tidyquant)
 library(RTextTools)
 library(tm)
 library(slam)
+library(nnet)
 #library(SnowballC)
 #library(broom)
 #library(pdftools)
@@ -221,21 +223,68 @@ NNET_duplicate_multiple_CLASSIFY <- classify_model(container_duplicate, NNET_dup
 
 #Manual NNet
 mycorpus <- Corpus(VectorSource(parent_train_total$article))
-mycorpus1 <- Corpus(VectorSource(parent_train_total$cat))
-train_matrix=DocumentTermMatrix(mycorpus)
+train_matrix = DocumentTermMatrix(mycorpus)
 
-inspect(train_matrix[1:2,1:20])
-nrow(train_matrix)
-as.data.frame(train_matrix)
+my_corpus_test = Corpus(VectorSource(parent_test_duplicate$article))
+train_matrix_test = DocumentTermMatrix(my_corpus_test)
 
-nnet(train_matrix,as.numeric(factor(parent_train_total$cat)), size = 8, MaxNWts = 80000)
-class(as.factor(parent_train_total$cat))
-NNET_Manipulation = nnet(train_matrix$v,train_matrix$i,size=10,censored = FALSE)
-ypred=predict(NNET_Manipulation,newdata=test_matrix$i)
-head(ypred)
-length(unique(matrix_duplicate$v))
-max(train_matrix$i)
+inspect(train_matrix_test[1:3,100:140])
 
+nnet_docmex = nnet(train_matrix,as.numeric(factor(parent_train_total$cat)), size = 4, MaxNWts = 60000, censored = FALSE)
+prediction = predict(nnet_docmex, train_matrix_test)
+
+# Creating SVM loop
+
+labelFUN <- function(topic, rt) {
+  label <- list()
+  for (i in 1:length(topic)){
+    label[[i]] <- rep(0, length(rt$cat))
+    
+    for (j in 1:length(rt$cat)) {
+      if (topic[i] %in% rt$cat[j]) {
+        label[[i]][j] <- 1
+      }
+    }
+  }
+  
+  
+  ldafr <- do.call(cbind.data.frame, label)
+  names(ldafr) <- topic
+  return(ldafr)
+}
+
+#Dataframe for class label
+labelDF <- labelFUN(h1, parent_total_duplicate)
+
+container <- list()
+analytics <- list()
+for(i in 1:length(h1)){
+  #container[[i]] <- create_container(clean_dtm, labelDF[rownames(clean_dtm), i], trainSize = 1:12850, testSize= 12850:19049, virgin=FALSE)
+  container[[i]] <- create_container(train_matrix_total, labelDF[rownames(train_matrix_total), i], trainSize = 1:1000, testSize= 1001:2000, virgin=FALSE)
+  
+  #Train
+  SVM <- train_model(container[[i]], "SVM")
+  
+  #Classify
+  SVMCL <- classify_model(container[[i]], SVM)
+  
+  #Analytics
+  analytics[[i]] <- create_analytics(container[[i]], cbind(SVMCL))
+}
+
+#Evaluation criteia 
+Precision <-c()
+Recall <- c()
+F1Score <- c()
+
+#SVM Accuracy dataframe
+for(i in 1:length(h1)) {
+  Precision[i] <- summary(analytics[[i]])[1]
+  Recall[i] <- summary(analytics[[i]])[2]
+  F1Score[i] <- summary(analytics[[i]])[3]
+}
+scoreSVM <- data.frame(h1, Precision, Recall, F1Score)
+print(scoreSVM)
 
 # 7.Exporting Data
 write.csv(analytics@document_summary, "DocumentSummary.csv")
