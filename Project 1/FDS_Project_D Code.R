@@ -80,9 +80,64 @@ container <- create_container(doc_matrix,
                               virgin=FALSE)  
 
 #Training Models - Initial tests
+# SVM vanilla running
 SVM <- train_model(container,"SVM")
 SVM_CLASSIFY <- classify_model(container, SVM)
 
+# SVM one against the rest
+labelFUN <- function(topic, rt) {
+  label <- list()
+  for (i in 1:length(topic)){
+    label[[i]] <- rep(0, length(rt$cat))
+    
+    for (j in 1:length(rt$cat)) {
+      if (topic[i] %in% rt$cat[j]) {
+        label[[i]][j] <- 1
+      }
+    }
+  }
+  
+  
+  ldafr <- do.call(cbind.data.frame, label)
+  names(ldafr) <- topic
+  return(ldafr)
+}
+
+labelDF_multi <- labelFUN(h1, parent_totalND)
+
+train_matrix_corpus_multi = VCorpus(VectorSource(parent_totalND$article))
+train_matrix_total_multi = DocumentTermMatrix(train_matrix_corpus_multi)
+
+container_multi <- list()
+analytics_multi <- list()
+for(i in 1:length(h1)){
+  container_multi[[i]] <- create_container(train_matrix_total_multi,
+                                     labelDF_multi[rownames(train_matrix_total_multi), i],
+                                     trainSize = 1:1000,
+                                     testSize= 1001:2000,
+                                     virgin=FALSE)
+  #Train
+  SVM_multi <- train_model(container_multi[[i]], "SVM")
+  #Classify
+  SVMCL_multi <- classify_model(container_multi[[i]], SVM_multi)
+  #Analytics
+  analytics_multi[[i]] <- create_analytics(container_multi[[i]], cbind(SVMCL_multi))
+}
+
+Precision_multi <-c()
+Recall_multi <- c()
+F1Score_multi <- c()
+
+for(i in 1:length(h1)) {
+  Precision_multi[i] <- summary(analytics_multi[[i]])[1]
+  Recall_multi[i] <- summary(analytics_multi[[i]])[2]
+  F1Score_multi[i] <- summary(analytics_multi[[i]])[3]
+}
+scoreSVM_multi <- data.frame(h1, Precision_multi, Recall_multi, F1Score_multi)
+print(scoreSVM_multi)
+
+
+# Other methods
 SLDA <- train_model(container,"SLDA")
 SLDA_CLASSIFY <- classify_model(container, SLDA)
 
@@ -223,7 +278,7 @@ NNET_duplicate_multiple_CLASSIFY <- classify_model(container_duplicate, NNET_dup
 
 # ------------- NOT WORKING
 #Manual NNet
-set_sparse = 0.998
+set_sparse = 0.7
 mycorpus <- VCorpus(VectorSource(parent_train_total$article))
 train_matrix = DocumentTermMatrix(mycorpus)
 train_matrix_sparse = removeSparseTerms(train_matrix,
@@ -265,10 +320,17 @@ labelFUN <- function(topic, rt) {
 
 labelDF <- labelFUN(h1, parent_total_duplicate)
 
+train_matrix_corpus = VCorpus(VectorSource(parent_total_duplicate$article))
+train_matrix_total = DocumentTermMatrix(train_matrix_corpus)
+
 container <- list()
 analytics <- list()
 for(i in 1:length(h1)){
-  container[[i]] <- create_container(train_matrix_total, labelDF[rownames(train_matrix_total), i], trainSize = 1:1000, testSize= 1001:2000, virgin=FALSE)
+  container[[i]] <- create_container(train_matrix_total,
+                                     labelDF[rownames(train_matrix_total), i],
+                                     trainSize = 1:1000,
+                                     testSize= 1001:2000,
+                                     virgin=FALSE)
   #Train
   SVM <- train_model(container[[i]], "SVM")
   #Classify
